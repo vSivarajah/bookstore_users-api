@@ -1,3 +1,4 @@
+//user data transfer object
 package users
 
 import (
