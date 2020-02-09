@@ -5,12 +5,16 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/vSivarajah/bookstore_users-api/datasources/mysql/users_db"
 	"github.com/vSivarajah/bookstore_users-api/domain/users"
 	"github.com/vSivarajah/bookstore_users-api/services"
 	"github.com/vSivarajah/bookstore_users-api/utils/errors"
 )
 
 func GetUser(c *gin.Context) {
+	if err := users_db.Client.Ping(); err != nil {
+		panic(err)
+	}
 	userId, userErr := strconv.ParseInt(c.Param("user_id"), 10, 64)
 	if userErr != nil {
 		err := errors.NewBadRequestError("User id should be a number")
@@ -24,7 +28,6 @@ func GetUser(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, user)
-
 }
 
 func CreateUser(c *gin.Context) {
