@@ -11,7 +11,7 @@ import (
 const (
 	errorNoRows           = "no rows in result set"
 	indexUniqueEmail      = "unique_EMAIL"
-	queryInsertUser       = "INSERT INTO users(firstname, lastname, email,status,password, datecreated) VALUES(?, ?, ?, ?, ?, ?);"
+	queryInsertUser       = "INSERT INTO users(firstname, lastname, email,status, password, datecreated) VALUES(?, ?, ?, ?, ?, ?);"
 	queryGetUser          = "SELECT id, firstname,lastname, email, status, datecreated FROM users WHERE id=?;"
 	queryUpdateUser       = "UPDATE users SET firstname=?, lastname=?, email=? WHERE id=?;"
 	queryDeleteUser       = "DELETE FROM users WHERE id=?;"
