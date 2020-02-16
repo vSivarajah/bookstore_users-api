@@ -25,4 +25,19 @@ func GetUser(userId int64) (*users.User, *errors.RestErr) {
 	return result, nil
 }
 
+func UpdateUser(user users.User) (*users.User, *errors.RestErr) {
+	current, err := GetUser(user.ID)
+	if err != nil {
+		return nil, err
+	}
+	current.FirstName = user.FirstName
+	current.LastName = user.LastName
+	current.Email = user.Email
+
+	if err := current.Update(); err != nil {
+		return nil, err
+	}
+	return current, nil
+}
+
 //CREATE TABLE `users_db`.`users`(`id` BIGINT(20) NOT NULL AUTO_INCREMENT, `firstname` VARCHAR(45), `lastname` VARCHAR(45), `email` VARCHAR(45), `datecreated` VARCHAR(45), PRIMARY KEY (`id`), UNIQUE INDEX `email_UNIQUE`(`email` ASC));

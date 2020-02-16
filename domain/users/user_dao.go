@@ -13,6 +13,7 @@ const (
 	indexUniqueEmail = "unique_EMAIL"
 	queryInsertUser  = "INSERT INTO users(firstname, lastname, email, datecreated) VALUES(?, ?, ?, ?);"
 	queryGetUser     = "SELECT id, firstname,lastname, email, datecreated FROM users WHERE id=?;"
+	queryUpdateUser  = "UPDATE users SET firstname=?, lastname=?, email=? WHERE id=?;"
 )
 
 var (
@@ -60,5 +61,18 @@ func (user *User) Save() *errors.RestErr {
 	}
 	user.ID = userId
 
+	return nil
+}
+
+func (user *User) Update() *errors.RestErr {
+	stmt, err := users_db.Client.Prepare(queryUpdateUser)
+	if err != nil {
+		return errors.NewInternalServerError(err.Error())
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(user.FirstName, user.LastName, user.Email, user.ID)
+	if err != nil {
+		return errors.NewInternalServerError(fmt.Sprintf("error when trying to update user: %s", err.Error()))
+	}
 	return nil
 }
