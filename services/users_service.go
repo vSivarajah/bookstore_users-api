@@ -2,6 +2,7 @@ package services
 
 import (
 	"github.com/vSivarajah/bookstore_users-api/domain/users"
+	"github.com/vSivarajah/bookstore_users-api/utils/crypto_utils"
 	"github.com/vSivarajah/bookstore_users-api/utils/date_utils"
 	"github.com/vSivarajah/bookstore_users-api/utils/errors"
 )
@@ -11,6 +12,8 @@ func Create(user users.User) (*users.User, *errors.RestErr) {
 		return nil, err
 	}
 	user.DateCreated = date_utils.GetNowString()
+	user.Status = users.StatusActive
+	user.Password = crypto_utils.GetMd5(user.Password)
 	if err := user.Save(); err != nil {
 		return nil, err
 	}
@@ -61,6 +64,11 @@ func Update(isPartial bool, user users.User) (*users.User, *errors.RestErr) {
 func Delete(userId int64) *errors.RestErr {
 	user := &users.User{ID: userId}
 	return user.Delete()
+}
+
+func Search(status string) ([]users.User, *errors.RestErr) {
+	dao := &users.User{}
+	return dao.FindByStatus(status)
 }
 
 //CREATE TABLE `users_db`.`users`(`id` BIGINT(20) NOT NULL AUTO_INCREMENT, `firstname` VARCHAR(45), `lastname` VARCHAR(45), `email` VARCHAR(45), `datecreated` VARCHAR(45), PRIMARY KEY (`id`), UNIQUE INDEX `email_UNIQUE`(`email` ASC));

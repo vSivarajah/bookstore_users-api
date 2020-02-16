@@ -9,12 +9,13 @@ import (
 )
 
 const (
-	errorNoRows      = "no rows in result set"
-	indexUniqueEmail = "unique_EMAIL"
-	queryInsertUser  = "INSERT INTO users(firstname, lastname, email, datecreated) VALUES(?, ?, ?, ?);"
-	queryGetUser     = "SELECT id, firstname,lastname, email, datecreated FROM users WHERE id=?;"
-	queryUpdateUser  = "UPDATE users SET firstname=?, lastname=?, email=? WHERE id=?;"
-	queryDeleteUser  = "DELETE FROM users WHERE id=?;"
+	errorNoRows           = "no rows in result set"
+	indexUniqueEmail      = "unique_EMAIL"
+	queryInsertUser       = "INSERT INTO users(firstname, lastname, email,status,password, datecreated) VALUES(?, ?, ?, ?, ?, ?);"
+	queryGetUser          = "SELECT id, firstname,lastname, email, status, datecreated FROM users WHERE id=?;"
+	queryUpdateUser       = "UPDATE users SET firstname=?, lastname=?, email=? WHERE id=?;"
+	queryDeleteUser       = "DELETE FROM users WHERE id=?;"
+	queryFindUserByStatus = "SELECT ID, firstname, lastname, email, status, datecreated FROM users WHERE status=?;"
 )
 
 var (
@@ -29,7 +30,7 @@ func (user *User) Get() *errors.RestErr {
 	defer stmt.Close()
 
 	result := stmt.QueryRow(user.ID)
-	if err := result.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.DateCreated); err != nil {
+	if err := result.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.DateCreated, &user.Status); err != nil {
 		if strings.Contains(err.Error(), errorNoRows) {
 			return errors.NewNotFoundError(fmt.Sprintf("user %d note found", user.ID))
 		}
@@ -47,7 +48,7 @@ func (user *User) Save() *errors.RestErr {
 	}
 	defer stmt.Close()
 
-	insertResult, err := stmt.Exec(user.FirstName, user.LastName, user.Email, user.DateCreated)
+	insertResult, err := stmt.Exec(user.FirstName, user.LastName, user.Email, user.Status, user.Password, user.DateCreated)
 	if err != nil {
 		if strings.Contains(err.Error(), indexUniqueEmail) {
 			return errors.NewBadRequestError(
@@ -88,4 +89,32 @@ func (user *User) Delete() *errors.RestErr {
 		return errors.NewBadRequestError("Cant delete user")
 	}
 	return nil
+}
+
+func (user *User) FindByStatus(status string) ([]User, *errors.RestErr) {
+	stmt, err := users_db.Client.Prepare(queryFindUserByStatus)
+	if err != nil {
+		return nil, errors.NewInternalServerError(err.Error())
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(status)
+	defer rows.Close()
+
+	if err != nil {
+		return nil, errors.NewInternalServerError(err.Error())
+	}
+
+	results := make([]User, 0)
+	for rows.Next() {
+		var user User
+		if err := rows.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Status, &user.DateCreated, &user.Status); err != nil {
+			return nil, errors.NewInternalServerError("parse error")
+		}
+		results = append(results, user)
+	}
+	if len(results) == 0 {
+		return nil, errors.NewNotFoundError(fmt.Sprintf("No users matching status %s", status))
+	}
+	return results, nil
 }
