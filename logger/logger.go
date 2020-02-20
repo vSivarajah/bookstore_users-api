@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	Log *zap.Logger
+	log *zap.Logger
 )
 
 func init() {
@@ -24,7 +24,7 @@ func init() {
 		},
 	}
 	var err error
-	if Log, err = logConfig.Build(); err != nil {
+	if log, err = logConfig.Build(); err != nil {
 		panic(err)
 	}
 }

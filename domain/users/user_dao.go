@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/vSivarajah/bookstore_users-api/datasources/mysql/users_db"
+	"github.com/vSivarajah/bookstore_users-api/logger"
 	"github.com/vSivarajah/bookstore_users-api/utils/errors"
 )
 
@@ -25,6 +26,7 @@ var (
 func (user *User) Get() *errors.RestErr {
 	stmt, err := users_db.Client.Prepare(queryGetUser)
 	if err != nil {
+		logger.Error("Error when trying to prepare get user statement", err)
 		return errors.NewInternalServerError(err.Error())
 	}
 	defer stmt.Close()
