@@ -10,12 +10,12 @@ import (
 	"github.com/vsivarajah/bookstore_users-api/utils/errors"
 )
 
-func getUserId(userIdParam string) (int64, *errors.RestErr) {
-	userId, userErr := strconv.ParseInt(userIdParam, 10, 64)
+func getUserID(userIdParam string) (int64, *errors.RestErr) {
+	userID, userErr := strconv.ParseInt(userIdParam, 10, 64)
 	if userErr != nil {
 		return 0, errors.NewBadRequestError("user id should be a number")
 	}
-	return userId, nil
+	return userID, nil
 }
 
 func CreateUser(c *gin.Context) {
@@ -27,34 +27,34 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	result, saveErr := services.CreateUser(user)
+	result, saveErr := services.UsersService.CreateUser(user)
 	if saveErr != nil {
 		c.JSON(saveErr.Status, saveErr)
 		return
 	}
 
-	c.JSON(http.StatusCreated, result)
+	c.JSON(http.StatusCreated, result.Marshall(c.GetHeader("X-Public") == "true"))
 
 }
 
 func GetUser(c *gin.Context) {
-	userId, idErr := getUserId(c.Param("user_id"))
+	userId, idErr := getUserID(c.Param("user_id"))
 	if idErr != nil {
 		c.JSON(idErr.Status, idErr)
 		return
 	}
-	user, getErr := services.GetUser(userId)
+	user, getErr := services.UsersService.GetUser(userId)
 	if getErr != nil {
 		c.JSON(getErr.Status, getErr)
 		return
 	}
-	c.JSON(http.StatusOK, user)
+	c.JSON(http.StatusOK, user.Marshall(c.GetHeader("X-Public") == "true"))
 
 }
 
 func UpdateUser(c *gin.Context) {
 	// Fetch the userid from the param
-	userId, idErr := getUserId(c.Param("user_id"))
+	userId, idErr := getUserID(c.Param("user_id"))
 	if idErr != nil {
 		c.JSON(idErr.Status, idErr)
 		return
@@ -71,22 +71,22 @@ func UpdateUser(c *gin.Context) {
 
 	isPartial := c.Request.Method == http.MethodPatch
 
-	result, err := services.UpdateUser(isPartial, user)
+	result, err := services.UsersService.UpdateUser(isPartial, user)
 	if err != nil {
 		c.JSON(err.Status, err)
 		return
 	}
-	c.JSON(http.StatusOK, result)
+	c.JSON(http.StatusOK, result.Marshall(c.GetHeader("X-Public") == "true"))
 }
 
 func DeleteUser(c *gin.Context) {
-	userId, idErr := getUserId(c.Param("user_id"))
+	userId, idErr := getUserID(c.Param("user_id"))
 	if idErr != nil {
 		c.JSON(idErr.Status, idErr)
 		return
 	}
 
-	if err := services.DeleteUser(userId); err != nil {
+	if err := services.UsersService.DeleteUser(userId); err != nil {
 		c.JSON(err.Status, err)
 		return
 	}
@@ -95,10 +95,11 @@ func DeleteUser(c *gin.Context) {
 
 func Search(c *gin.Context) {
 	status := c.Query("status")
-	users, err := services.Search(status)
+	users, err := services.UsersService.SearchUser(status)
 	if err != nil {
 		c.JSON(err.Status, err)
 		return
 	}
-	c.JSON(http.StatusOK, users)
+	result := users.Marshall(c.GetHeader("X-Public") == "true")
+	c.JSON(http.StatusOK, result)
 }
