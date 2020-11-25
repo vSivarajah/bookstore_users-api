@@ -3,7 +3,6 @@ package users
 import (
 	"fmt"
 
-	"github.com/vsivarajah/bookstore_users-api/utils/date_utils"
 	"github.com/vsivarajah/bookstore_users-api/utils/mysql_utils"
 
 	"github.com/vsivarajah/bookstore_users-api/datasources/mysql/users_db"
@@ -12,8 +11,8 @@ import (
 
 const (
 	queryUpdateUser       = "UPDATE users SET first_name=?, last_name=?,email=? WHERE id=?;"
-	queryInsertUser       = "INSERT INTO users(first_name, last_name, email, date_created) VALUES(?, ?,?,?);"
-	queryGetUser          = "SELECT id, first_name, last_name, email, date_created FROM users WHERE id=?;"
+	queryInsertUser       = "INSERT INTO users(first_name, last_name, email, status, password, date_created) VALUES(?, ?,?,?, ?, ?);"
+	queryGetUser          = "SELECT id, first_name, last_name, email, status, date_created FROM users WHERE id=?;"
 	queryDeleteUser       = "DELETE FROM users WHERE id=?;"
 	queryFindUserByStatus = "SELECT id, first_name, last_name, email, date_created, status FROM users WHERE status=?;"
 )
@@ -31,7 +30,7 @@ func (user *User) Get() *errors.RestErr {
 
 	result := stmt.QueryRow(user.Id)
 
-	if getErr := result.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.DateCreated); getErr != nil {
+	if getErr := result.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.Status, &user.DateCreated); getErr != nil {
 		return mysql_utils.ParseError(getErr)
 	}
 
@@ -44,8 +43,7 @@ func (user *User) Save() *errors.RestErr {
 		return errors.NewInternalServerError(err.Error())
 	}
 	defer stmt.Close()
-	user.DateCreated = date_utils.GetNowString()
-	insertResult, saveErr := stmt.Exec(user.FirstName, user.LastName, user.Email, user.DateCreated)
+	insertResult, saveErr := stmt.Exec(user.FirstName, user.LastName, user.Email, user.Status, user.Password, user.DateCreated)
 	if saveErr != nil {
 		return mysql_utils.ParseError(saveErr)
 	}
